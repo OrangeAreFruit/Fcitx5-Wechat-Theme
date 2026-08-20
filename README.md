@@ -4,6 +4,11 @@ WeChat-style input method themes for [Fcitx5](https://github.com/fcitx/fcitx5), 
 
 ![Light](screenshots/light-mode-exam.png) ![Dark](screenshots/dark-mode-exam.png)
 
+> **⚠️ Before you start — know the two ways to use this theme.**
+>
+> - **Just want to try it** (no tweaking): run the install commands below and it works out of the box.
+> - **Want pixel-perfect results after changing the font size / margins**: this theme uses **SVG-based highlight blocks**. The SVGs are tuned for **14px text** (see [Customization](#customization-diy)); if you bump the system font size without adjusting the SVG `rx`/margins, the highlight roundness breaks. Beginners should treat the shipped defaults as the recommended baseline and only tweak via the guide below.
+
 ## Features
 
 - **Two SVG vector themes**: `wechat-light` (white, bright green highlight) and `wechat-dark` (translucent dark, muted green highlight).
@@ -134,37 +139,87 @@ fcitx5-wechat-theme/
 
 ## Customization (DIY)
 
-The theme is **designed for 14px candidate text**. If you change the font size
-in `classicui.conf`, the corner radius and padding no longer match — you must
-re-render the SVGs to stay in proportion (see the geometry table below).
+This is where it gets hands-on. The default theme is **designed for 14px text**,
+and all visual parameters live in one plain-text file — there's no CSS and no
+compiled code, so editing is as simple as changing a number and reloading:
 
 ```ini
 # ~/.config/fcitx5/conf/classicui.conf
 Font="Noto Sans CJK SC 14"     # ← change the trailing number to resize
 ```
 
-Change the font size, then edit the two SVGs (`panel.svg`, `highlight.svg`)
-and the matching margins in `theme.conf`. Keep **rx == Margin** on each layer
-so the nine-patch keeps the corner radius; otherwise corners get clipped.
+```ini
+# <theme>/theme.conf                      (wechat-light or wechat-dark)
+[InputPanel/TextMargin]      Left/Right=8  Top/Bottom=6   # space around the text
+[InputPanel/ContentMargin]   Left/Right=4  Top/Bottom=6   # gap between highlight block and panel edge
+[InputPanel/Highlight/Margin] Left/Right=8 Top/Bottom=8   # corner protection (must == SVG rx)
+[InputPanel/Background/Margin] Left/Right=10 Top/Bottom=10# corner protection (must == SVG rx)
+```
 
-### Geometry reference (14px design)
+### Where the knobs are (for non-developers)
 
-| Layer | File / setting | Size | Corner `rx` | Note |
-|-------|----------------|------|-------------|------|
-| Panel (outer) | `panel.svg` / `Background/Margin` | 320 × 54 | `rx=10` | white (light) / translucent dark |
-| Inner spacing | `ContentMargin` | — | — | left/right 4px, top/bottom 6px |
-| Highlight block | `highlight.svg` / `Highlight/Margin` | 120 × 40 | `rx=8` | corner radius on candidates |
-| Text | `TextMargin` / `Font` | — | — | 14px |
+All the geometry you care about is in that one `theme.conf` file:
 
-> `rx` must equal the corresponding `Margin` (e.g. panel `rx=10` ↔
-> `Background/Margin=10`, highlight `rx=8` ↔ `Highlight/Margin=8`). The
-> nine-patch keeps the four corners fixed; only the middle stretches, so the
-> radius survives any number of candidates. If the highlight block looks
-> cramped or loses its roundness, raise/lower `rx` and its margin together.
+- **Highlight block (the selected candidate)** — `Highlight/Margin` is its
+  **outer** spacing; `Highlight/.../Color` is its fill. Its **corner roundness**
+  actually comes from `highlight.svg` (`rx`), not from CSS.
+- **Panel (the popup frame)** — `Background` color + `Background/Margin`
+  (outer corners). Panel roundness comes from `panel.svg` (`rx`).
+- **Spacing between highlight and panel edge** — `ContentMargin`.
+- **Spacing between text and its cell** — `TextMargin`.
 
-DIY recipe (e.g. make the highlight taller): add the same value to
-`highlight.svg`'s rect `height`, its `ry`, and `Highlight/Margin`'s
-top/bottom — then run `fcitx5 -r -d` to reload.
+> **Margin vs padding — don't confuse them.** There are no `padding-*` keys in
+> this theme; fcitx5 uses only "margins" for the spacing layers, plus the SVG
+> `rx` for roundness. `Margin` = protected corner strip (keeps the radius);
+> `ContentMargin` = gap between highlight and panel. Changing one rarely needs
+> the other touched.
+
+### Reference baseline (the values we tuned by hand)
+
+The following set is what was dialed in through real visual iteration against
+WeChat and ships with the theme. It's a solid starting point:
+
+| Layer | Setting | Value |
+|-------|---------|-------|
+| Font size | `classicui.conf` `Font` | `14` |
+| Outer panel roundness | `panel.svg` `rx` + `Background/Margin` | `10` |
+| Inner highlight roundness | `highlight.svg` `rx` + `Highlight/Margin` | `8` |
+| Highlight ↔ panel spacing | `ContentMargin` | L/R `4`, T/B `6` |
+| Text ↔ cell spacing | `TextMargin` | L/R `8`, T/B `6` |
+| Light highlight color | `HighlightBackgroundColor` (light) | `#34B950` |
+| Dark highlight color | `HighlightBackgroundColor` (dark) | `#279E42` |
+
+**The golden rule** that stops the roundness from vanishing: a layer's SVG
+`rx` **must equal** that layer's `Margin` (e.g. highlight `rx=8` ↔
+`Highlight/Margin=8`). The nine-patch keeps the four corners fixed and only
+stretches the middle, so as long as `rx == Margin`, the corner survives any
+number of candidates — if it ever looks cut off, they've drifted apart.
+
+### Example: make the highlight taller
+
+Add the same value to all three places, then reload with `fcitx5 -r -d`:
+
+```ini
+# highlight.svg
+<rect ... height="44" ... rx="10" ry="10"  />
+# theme.conf
+[InputPanel/Highlight/Margin] Left=10 Right=10 Top=10 Bottom=10
+[Menu/Highlight/Margin]       Left=10 Right=10 Top=10 Bottom=10
+```
+
+## Known Issues
+
+- **SVG font-size misalignment**: the default highlight is an SVG tuned for
+  14px text. After changing the system font size, the highlight block may no
+  longer sit flush with the text until you re-tune `rx`/margins (see
+  [Customization](#customization-diy)). If you don't care about perfect
+  alignment, the shipped defaults still look fine.
+- **Candidate positioning in Electron apps**: some XWayland apps (e.g.
+  Chromium/Electron-based ones) report no preedit cursor, so the candidate
+  window anchors to the top of the window instead of the caret. This is an
+  upstream input-method quirk, not a theme bug.
+- **Shadow on Wayland**: a drop shadow is baked into `panel.svg`, but Wayland
+  doesn't extend the window, so the shadow only reads as an inner edge ring.
 
 ## Credits
 
