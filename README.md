@@ -29,7 +29,7 @@ SVG rendering needs fcitx5 classicui built with librsvg:
 
 ### Step 1 — Install the prebuilt SVG fcitx5 (Ubuntu 26.04 / x86_64)
 
-Download `fcitx5-svg-5.1.22-linux-x86_64.tar.gz` from the [Releases](https://github.com/) page, then run:
+Download `fcitx5-svg-5.1.22-linux-x86_64.tar.gz` from the [Releases](https://github.com/OrangeAreFruit/Fcitx5-Wechat-Theme/releases) page, then run:
 
 ```bash
 bash install-fcitx5-svg.sh ./fcitx5-svg-5.1.22-linux-x86_64.tar.gz
@@ -49,7 +49,7 @@ ldd /usr/lib/x86_64-linux-gnu/fcitx5/libclassicui.so | grep librsvg
 
 ### Option A — .deb package (Step 2, install the theme)
 
-Download `fcitx5-wechat-theme_1.1.1_amd64.deb` from the [Releases](https://github.com/) page, then:
+Download `fcitx5-wechat-theme_1.1.1_amd64.deb` from the [Releases](https://github.com/OrangeAreFruit/Fcitx5-Wechat-Theme/releases) page, then:
 
 ```bash
 sudo apt install ./fcitx5-wechat-theme_1.1.1_amd64.deb
