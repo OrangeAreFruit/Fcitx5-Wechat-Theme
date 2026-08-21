@@ -5,7 +5,16 @@ WeChat-style input method for [Fcitx5](https://github.com/fcitx/fcitx5), with
 panel** (transparent rounded card), a rime-ice layout, and a one-click install
 script validated in Docker.
 
-![Light](screenshots/light-mode-exam.png) ![Dark](screenshots/dark-mode-exam.png)
+![Light](assets/light-theme.png) ![Dark](assets/dark-theme.png)
+
+![Settings panel (light)](assets/light-theme-panel.png) ![Settings panel (dark)](assets/dark-theme-panel.png)
+
+> **How to read the previews:** the top row is the **candidate window** in the
+> light / dark theme — the green ring at the bottom-right is the settings
+> button, and hovering it shows a light-blue backdrop. The bottom row is the
+> **settings panel** opened by that button: a transparent rounded always-on-top
+> card you can drag by its title bar, with a font-size slider and light/dark
+> theme cards. Every change applies instantly — no fcitx5 restart needed.
 
 > **⚠️ Before you start — know the two ways to use this theme.**
 >
@@ -145,7 +154,7 @@ fcitx5-wechat-theme/
 │   │   ├── wechat-light/   # theme.conf + panel.svg + highlight.svg
 │   │   └── wechat-dark/
 │   └── rime_ice.custom.yaml
-├── screenshots/            # Preview images
+├── assets/                 # Preview images (candidate window + settings panel)
 └── dist/                   # build outputs (gitignored)
 ```
 
