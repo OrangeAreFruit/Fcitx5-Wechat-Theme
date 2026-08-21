@@ -46,7 +46,28 @@ info "备份目录: $BACKUP （所有被覆盖的系统文件都会备份到这�
 
 # ---------------- 前置检查 ----------------
 step "0. 前置检查"
-NEED_PKGS=(librsvg2-2 librsvg2-common libxcb-ewmh2 libxcb-imdkit1 librime1t64)
+# 先停掉运行中的 fcitx5：覆盖 /usr 下的二进制/共享库前必须让它退出，
+# 否则文件被占用，轻则覆盖失败、重则装完仍是旧代码（必须手动 pkill）。
+if pgrep -x fcitx5 >/dev/null 2>&1; then
+  warn "检测到 fcitx5 正在运行，先停止它（避免覆盖文件冲突）"
+  pkill -x fcitx5 2>/dev/null || true
+  for _ in 1 2 3 4 5 6 7 8 9 10; do
+    pgrep -x fcitx5 >/dev/null 2>&1 || break
+    sleep 0.5
+  done
+  sleep 1
+  if pgrep -x fcitx5 >/dev/null 2>&1; then
+    warn "fcitx5 仍未退出，继续执行（可能被守护进程拉起）"
+  else
+    info "fcitx5 已停止"
+  fi
+else
+  info "fcitx5 当前未运行"
+fi
+
+# 系统库 + 面板所需 Python 依赖（pywebview 缺了会导致面板打不开）
+NEED_PKGS=(librsvg2-2 librsvg2-common libxcb-ewmh2 libxcb-imdkit1 librime1t64 \
+           python3-webview python3-pyqt5.qtwebengine)
 MISS=()
 for p in "${NEED_PKGS[@]}"; do dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q "install ok installed" || MISS+=("$p"); done
 if [ ${#MISS[@]} -gt 0 ]; then
@@ -147,6 +168,9 @@ info "fcitx5 配置完成（已有输入法配置仅备份未删除）"
 # ---------------- 5. 安装设置面板（pywebview + QtWebEngine） ----------------
 step "5. 安装 Web 设置面板"
 PANEL_DEST="/opt/fcitx5-wechat-panel"
+# 停掉可能在运行的老面板进程 + 清锁，确保升级后打开的是新代码
+pkill -f "webpanel.py" 2>/dev/null || true
+rm -f /tmp/ime-panel.lock /tmp/ime-panel.wake
 mkdir -p "$PANEL_DEST"
 cp -a "$PANEL_SRC"/. "$PANEL_DEST/"
 chmod +x "$PANEL_DEST/run-panel.sh" 2>/dev/null || true
@@ -163,12 +187,11 @@ if [ ! -e "$HHOME/fcitx5-wechat-panel" ]; then
 else
   warn "已存在 $HHOME/fcitx5-wechat-panel（真实目录），保留不动"
 fi
-# 校验 QtWebEngine（透明面板必需）
-if /usr/bin/python3 -c "import PyQt5.QtWebEngineWidgets" 2>/dev/null \
-   || /usr/bin/python3 -c "import PyQt6.QtWebEngineWidgets" 2>/dev/null; then
-  info "QtWebEngine 可用，面板将支持透明圆角"
+# 校验面板运行依赖（pywebview + QtWebEngine，透明圆角必需）
+if /usr/bin/python3 -c "import webview, PyQt5.QtWebEngineWidgets" 2>/dev/null; then
+  info "面板依赖 OK (pywebview + QtWebEngine)，支持透明圆角"
 else
-  warn "未检测到 QtWebEngine，面板将回退为普通窗口（需 apt install python3-pyqt5.qtwebengine）"
+  warn "面板依赖未就绪：sudo apt install -y python3-webview python3-pyqt5.qtwebengine"
 fi
 
 # ---------------- 6. 托盘图标 ----------------
