@@ -26,6 +26,43 @@ SVG rendering needs fcitx5 classicui built with librsvg:
 
 ## Installation
 
+> **💡 One-click install (recommended):** if you want a **clean, from-zero
+> environment** that ends up with *only* Rime + rime-ice (雾凇拼音) + the WeChat
+> theme, run the bundled `install-all.sh` (see below). It removes other input
+> method stacks, pulls the needed libraries, deploys the prebuilt SVG fcitx5,
+> installs rime-ice + both themes, and configures fcitx5 to expose only
+> "雾凇拼音". Validated in a fresh Ubuntu 26.04 Docker container.
+
+### One-click install (entire environment) — `install-all.sh`
+
+For a brand-new / clean Ubuntu (x86_64), the whole thing in one command:
+
+```bash
+sudo bash install-all.sh
+```
+
+This performs all **7 steps** automatically:
+
+1. Removes any existing input-method stacks (ibus / fcitx / extra engines),
+   keeping fcitx5 / librime / librsvg.
+2. Installs the required system libraries, including the hard dependency
+   `libxcb-ewmh2` (missing it makes the skin vanish while typing still works).
+3. Deploys the bundled prebuilt **SVG fcitx5 5.1.22** (`packages/`) so real
+   rounded corners render.
+4. Installs the **rime-ice (雾凇拼音)** dictionary from `packages/rime-ice/`.
+5. Installs `wechat-light` / `wechat-dark` themes.
+6. Configures fcitx5: **only Rime enabled**, Chinese active by default,
+   `Theme=wechat-light`.
+7. Restarts fcitx5.
+
+The bundled assets (`packages/`) ship with the repo, so **no network / GitHub
+access is required** at install time — everything is local and offline.
+
+> Details of what changed in this version are in
+> [release-notes-v1.1.1.md](release-notes-v1.1.1.md).
+
+---
+
 > **Ubuntu 26.04 users need full SVG rounded corners.** The distro's
 > fcitx5 (5.1.19) has no SVG support, so follow **Step 1** below first to
 > install the prebuilt SVG fcitx5 (5.1.22), then **Step 2** to install the
@@ -124,10 +161,16 @@ ldd /usr/lib/x86_64-linux-gnu/fcitx5/libclassicui.so | grep librsvg
 ```
 fcitx5-wechat-theme/
 ├── install.sh              # User-level installer (themes + rime patch)
+├── install-all.sh          # ★ One-click full environment installer (7 steps)
 ├── install-fcitx5-svg.sh   # Installs the prebuilt SVG fcitx5 tarball
 ├── build-deb.sh            # Builds the .deb package
 ├── package-fcitx5.sh       # Builds the fcitx5-svg tarball
 ├── theme-switcher.sh       # GNOME dark-mode auto switcher
+├── packages/               # Bundled offline assets used by install-all.sh
+│   ├── fcitx5-svg-5.1.22-linux-x86_64.tar.gz   # prebuilt SVG fcitx5
+│   ├── rime-ice/           # rime-ice (雾凇拼音) dictionary
+│   └── themes/             # wechat-light / wechat-dark
+├── release-notes-v1.1.1.md # Changelog for v1.1.1
 ├── fcitx5/
 │   ├── themes/
 │   │   ├── wechat-light/   # theme.conf + panel.svg + highlight.svg
