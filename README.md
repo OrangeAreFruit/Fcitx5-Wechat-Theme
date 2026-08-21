@@ -46,8 +46,10 @@ SVG rendering needs fcitx5 classicui built with librsvg:
 
 ### One-click install (recommended) — `install-new.sh`
 
-Download this repo (git clone, or unpack the release tarball), then from the
-repo root:
+Download the latest **Source code** zip/tar.gz from the
+[Releases](https://github.com/OrangeAreFruit/Fcitx5-Wechat-Theme/releases) page
+(it bundles every asset — no git needed), or `git clone` this repo. Then from
+the repo root:
 
 ```bash
 sudo bash install-new.sh
@@ -73,52 +75,6 @@ Log out & back in once so the input-method environment variables take effect.
 > (gear button & tray Preference), the installer also creates the symlink
 > `~/fcitx5-wechat-panel → /opt/fcitx5-wechat-panel` so both entry points work on
 > any machine out of the box.
-
-### Step 1 — Install the prebuilt SVG fcitx5 (manual, Ubuntu 26.04 / x86_64)
-
-Download `fcitx5-svg-5.1.22-linux-x86_64.tar.gz` from the [Releases](https://github.com/OrangeAreFruit/Fcitx5-Wechat-Theme/releases) page, then run:
-
-```bash
-bash install-fcitx5-svg.sh ./fcitx5-svg-5.1.22-linux-x86_64.tar.gz
-```
-
-The script installs the apt base libraries, extracts the tarball, copies the
-fcitx5 binaries/libraries/data to `/usr`, and refreshes the linker cache.
-
-Verify SVG support:
-
-```bash
-ldd /usr/lib/x86_64-linux-gnu/fcitx5/libclassicui.so | grep librsvg
-```
-
-> To build this tarball yourself on a machine that already compiled fcitx5
-> from source, run `bash package-fcitx5.sh`.
-
-### Option A — .deb package (Step 2, install the theme)
-
-Download `fcitx5-wechat-theme_1.1.1_amd64.deb` from the [Releases](https://github.com/OrangeAreFruit/Fcitx5-Wechat-Theme/releases) page, then:
-
-```bash
-sudo apt install ./fcitx5-wechat-theme_1.1.1_amd64.deb
-```
-
-The package installs both themes to `/usr/share/fcitx5/themes/`, sets `Theme=wechat-light` in `classicui.conf`, and restarts fcitx5.
-
-To build the package yourself:
-
-```bash
-bash build-deb.sh        # → dist/fcitx5-wechat-theme_<ver>_amd64.deb
-```
-
-### Option B — script (user-level)
-
-```bash
-bash install.sh
-```
-
-Installs the themes to `~/.local/share/fcitx5/themes/`, the rime patch to `~/.local/share/fcitx5/rime/`, and restarts fcitx5.
-
-To switch themes, edit `Theme=` in `~/.config/fcitx5/conf/classicui.conf` (`wechat-light` / `wechat-dark`).
 
 ## Build from source
 
@@ -160,6 +116,13 @@ ldd /usr/lib/x86_64-linux-gnu/fcitx5/libclassicui.so | grep librsvg
 ```
 
 > Building over an `apt`-managed fcitx5 overwrites its files. Keep a system snapshot (e.g. `sudo timeshift --create`) before proceeding.
+
+To also get the WeChat-style modifications (candidate-window gear button, tray
+Preference/Restart menu, instant theme reload), copy the files in
+`src/fcitx5-patches/` over the matching paths in the fcitx5 source before
+building — see [src/fcitx5-patches/README.md](src/fcitx5-patches/README.md).
+The prebuilt binary in `packages/` already includes all of this, so this is
+only needed when you compile fcitx5 yourself.
 
 ## Project structure
 
