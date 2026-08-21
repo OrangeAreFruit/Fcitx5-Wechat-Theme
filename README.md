@@ -128,17 +128,11 @@ only needed when you compile fcitx5 yourself.
 
 ```
 fcitx5-wechat-theme/
-├── install-new.sh          # ★ Recommended one-click installer (8 steps, no data loss)
-├── install.sh              # User-level installer (themes + rime patch)
-├── install-all.sh          # Legacy one-click full environment installer (7 steps)
-├── install-fcitx5-svg.sh   # Installs the prebuilt SVG fcitx5 tarball (manual step 1)
-├── build-deb.sh            # Builds the .deb package
-├── package-fcitx5.sh       # Builds the fcitx5-svg tarball (also from a PATCH_DIR)
-├── theme-switcher.sh       # GNOME dark-mode auto switcher
-├── packages/               # Bundled offline assets used by the installers
+├── install-new.sh          # ★ One-click installer (run as root; no data loss)
+├── package-fcitx5.sh       # Repacks the prebuilt SVG fcitx5 tarball (maintainers)
+├── packages/               # Bundled offline assets for the installer
 │   ├── fcitx5-svg-5.1.22-linux-x86_64.tar.gz   # prebuilt SVG fcitx5 + patch modules
-│   ├── rime-ice/           # rime-ice (雾凇拼音) dictionary
-│   └── themes/             # wechat-light / wechat-dark (legacy)
+│   └── rime-ice/           # rime-ice (雾凇拼音) dictionary
 ├── wechat-panel/           # Web settings panel → installed to /opt/fcitx5-wechat-panel
 │   ├── webpanel.py         # pywebview + QtWebEngine transparent app
 │   ├── panel.html          # panel UI (font slider, light/dark cards)
@@ -152,7 +146,7 @@ fcitx5-wechat-theme/
 │   │   └── wechat-dark/
 │   └── rime_ice.custom.yaml
 ├── screenshots/            # Preview images
-└── dist/                   # build outputs (.deb + .tar.gz, gitignored)
+└── dist/                   # build outputs (gitignored)
 ```
 
 ## Customization (DIY)
