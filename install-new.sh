@@ -78,20 +78,54 @@ else
   info "系统库依赖已满足"
 fi
 
-# ---------------- Wayland 环境变量安全修复 ----------------
-# 根因：Wayland 会话下 GTK_IM_MODULE=fcitx 会让 GTK 应用（nautilus/ptyxis 等）
-# 加载 fcitx5 的 GTK IM module (im-fcitx5.so) 时 segfault，批量闪退。
-# Wayland 走 text-input 协议，根本不需要 GTK_IM_MODULE——检测到 Wayland 时
-# 自动从用户 ~/.profile 移除该行（QT_IM_MODULE / XMODIFIERS 保留）。
-PROF="$HHOME/.profile"
-if [ -S "/run/user/$HUID/wayland-0" ] && [ -f "$PROF" ]; then
-  cp -a "$PROF" "$BACKUP/profile.orig" 2>/dev/null || true
-  if grep -q 'GTK_IM_MODULE=fcitx' "$PROF"; then
-    sed -i '/GTK_IM_MODULE=fcitx/d; /GTK_IM_MODULE="fcitx"/d' "$PROF"
-    chown "$HUSER":"$(id -gn "$HUSER")" "$PROF" 2>/dev/null || true
-    info "Wayland 会话：已移除 ~/.profile 中的 GTK_IM_MODULE=fcitx（避免 GTK 应用崩溃）"
+# ---------------- Wayland 环境变量安全修复（防御机制） ----------------
+# 根因：Wayland 下 fcitx5 走 text-input 协议，不需要 X11 那套 IM 环境变量。
+# 尤其 GTK_IM_MODULE=fcitx 会让 GTK 应用（nautilus/ptyxis 等）加载
+# im-fcitx5.so 时 segfault 批量闪退。本方案面向 Wayland（Ubuntu 26.04），
+# 检测到 Wayland 会话时从常见配置文件移除三件套（先备份，幂等）。
+WAYLAND_OK=0
+[ -S "/run/user/$HUID/wayland-0" ] && WAYLAND_OK=1
+if [ "$WAYLAND_OK" = "1" ]; then
+  CLEANED_FILES=""
+  clean_im() {
+    local f="$1"
+    [ -f "$f" ] || return 0
+    if grep -qE '^(export[[:space:]]+)?(GTK_IM_MODULE|QT_IM_MODULE|XMODIFIERS)' "$f"; then
+      cp -a "$f" "$BACKUP${f//\//_}.orig" 2>/dev/null || true
+      sed -i -E \
+        '/^(export[[:space:]]+)?(GTK_IM_MODULE|QT_IM_MODULE|XMODIFIERS)[[:space:]]*=(.*)$/d' "$f"
+      CLEANED_FILES="$CLEANED_FILES $f"
+    fi
+  }
+  # 用户级配置文件 + 系统级 /etc/environment
+  clean_im "$HHOME/.profile"
+  clean_im "$HHOME/.bashrc"
+  clean_im "$HHOME/.xprofile"
+  clean_im "$HHOME/.pam_environment"
+  for cf in "$HHOME"/.config/environment.d/*.conf; do
+    [ -e "$cf" ] && clean_im "$cf"
+  done
+  clean_im "/etc/environment"
+  if [ -n "$CLEANED_FILES" ]; then
+    info "Wayland 会话：已从以下文件移除 IM 环境变量（避免 GTK 应用崩溃）：$CLEANED_FILES"
   else
-    info "Wayland 会话：~/.profile 无 GTK_IM_MODULE=fcitx，无需修复"
+    info "Wayland 会话：未发现 IM 环境变量残留（防御已就位）"
+  fi
+fi
+
+# 重建 GTK3 输入法模块缓存，注册 im-fcitx5.so（避免 GTK 目录扫描/加载异常）
+GTK3_Q=""
+for cand in /usr/lib/x86_64-linux-gnu/libgtk-3-0/gtk-query-immodules-3.0 \
+           /usr/lib/x86_64-linux-gnu/libgtk-3-0t64/gtk-query-immodules-3.0; do
+  [ -x "$cand" ] && { GTK3_Q="$cand"; break; }
+done
+if [ -n "$GTK3_Q" ]; then
+  GTK3_IM="/usr/lib/x86_64-linux-gnu/gtk-3.0/3.0.0"
+  if ls "$GTK3_IM"/immodules/im-*.so >/dev/null 2>&1; then
+    cp -a "$GTK3_IM/immodules.cache" "$BACKUP/immodules-gtk3.cache.orig" 2>/dev/null || true
+    "$GTK3_Q" "$GTK3_IM"/immodules/im-*.so > "$GTK3_IM/immodules.cache" 2>/dev/null \
+      && info "GTK3 输入法模块缓存已重建（注册 im-fcitx5）" \
+      || warn "GTK3 模块缓存重建失败（可忽略，Wayland 下不依赖它）"
   fi
 fi
 

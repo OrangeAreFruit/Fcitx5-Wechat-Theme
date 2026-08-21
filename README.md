@@ -230,13 +230,16 @@ Add the same value to all three places, then reload with `fcitx5 -r -d`:
 
 ## Known Issues
 
-- **On Wayland, don't set `GTK_IM_MODULE=fcitx`**: it makes GTK apps (e.g.
-  nautilus, ptyxis) crash with a segfault when they load fcitx5's GTK IM module.
-  Wayland sessions use the text-input protocol and don't need it —
-  `install-new.sh` detects Wayland and removes that line from
-  `~/.profile` automatically (`QT_IM_MODULE` / `XMODIFIERS` are kept). If you
-  set it yourself and apps crash, delete that line from `~/.profile` and log
-  back in.
+- **On Wayland, drop all IM environment variables** (`GTK_IM_MODULE`,
+  `QT_IM_MODULE`, `XMODIFIERS`): fcitx5 uses the text-input protocol there and
+  the X11 IM vars are neither needed nor safe — `GTK_IM_MODULE=fcitx` in
+  particular makes GTK apps (nautilus, ptyxis, …) crash with a segfault when
+  they load fcitx5's GTK IM module. `install-new.sh` detects a Wayland session
+  (/run/user/<uid>/wayland-0) and strips all three from `~/.profile`,
+  `~/.bashrc`, `~/.xprofile`, `~/.pam_environment`,
+  `~/.config/environment.d/*.conf` and `/etc/environment` (backed up first),
+  then rebuilds the GTK3 module cache. If apps on your machine already crash,
+  remove those lines manually and log back in.
 - **SVG font-size misalignment**: the default highlight is an SVG tuned for
   14px text. After changing the system font size, the highlight block may no
   longer sit flush with the text until you re-tune `rx`/margins (see
