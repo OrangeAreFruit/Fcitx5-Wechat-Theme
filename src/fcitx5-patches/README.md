@@ -9,19 +9,20 @@
 |---|---|---|
 | `ui/classic/inputwindow.h` / `.cpp` | `src/ui/classic/` | classicui（候选框） |
 | `ui/classic/classicui.cpp` | `src/ui/classic/` | classicui（配置监听/重绘） |
-| `modules/notificationitem/notificationitem.cpp` | `src/modules/notificationitem/` | notificationitem（托盘） |
+| `modules/notificationitem/notificationitem.cpp` | `src/modules/notificationitem/` | notificationitem（托盘图标） |
+| `modules/notificationitem/dbusmenu.cpp` | `src/modules/notificationitem/` | notificationitem（托盘菜单） |
 
 ## 功能说明
 
 ### classicui（候选框）
-- **右下角绿色圆环设置按钮**：位于最后一个候选右侧，点击唤起外部设置面板（`fcitx5-wechat-panel` 的 `run-panel.sh`）；鼠标悬停浮现浅蓝圆角背景。
+- **右下角绿色圆环设置按钮**：位于最后一个候选右侧，点击唤起外部设置面板（`$HOME/fcitx5-wechat-panel/run-panel.sh`，兼容符号链接由 `install-new.sh` 创建指向 `/opt/fcitx5-wechat-panel`）；鼠标悬停浮现浅蓝圆角背景。
 - **右键菜单**：候选框右键弹出「设置/主题/重启输入法」菜单。
 - **主题/字号即时生效**：监听 `~/.config/fcitx5/conf/classicui.conf` 变化自动重载并重绘，无需重启 fcitx5。
 - **布局预留**：右侧为设置按钮预留 space，避免被窗口边缘裁切。
 
 ### notificationitem（托盘图标 + 菜单）
 - 托盘图标固定为自定义图标名 `fcitx-wusong`（绿色圆角方块 + 双弯叶），位图直传 `IconPixmap`（从 `/usr/share/icons/hicolor/{16,22,32,48,64}x*/apps/fcitx-wusong.png` 读取），并设置 `IconThemePath=/usr/share/icons/hicolor/`。
-- 菜单精简为两项：**Preference**（点击启动设置面板，带绿色圆环图标）与 **Restart**（重启 fcitx5）。
+- 菜单精简为两项：**Preference**（点击启动设置面板，带绿色圆环图标）与 **Restart**（重启 fcitx5）——菜单构建与点击处理在 `dbusmenu.cpp`：Preference 通过 `$HOME/fcitx5-wechat-panel/run-panel.sh` 打开面板（同齿轮按钮的兼容符号链接方案），Restart 走 fcitx5 内部重启。
 
 ### 依赖图标
 - `/usr/share/icons/hicolor/scalable/apps/fcitx-wusong.svg`：源图（可自行替换定制）

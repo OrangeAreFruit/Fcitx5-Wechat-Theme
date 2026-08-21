@@ -68,6 +68,12 @@ The script (idempotent, no user data removed):
 
 Log out & back in once so the input-method environment variables take effect.
 
+> **Where the panel lives:** the panel is installed to `/opt/fcitx5-wechat-panel`.
+> Because the prebuilt patch modules launch it via `$HOME/fcitx5-wechat-panel/run-panel.sh`
+> (gear button & tray Preference), the installer also creates the symlink
+> `~/fcitx5-wechat-panel → /opt/fcitx5-wechat-panel` so both entry points work on
+> any machine out of the box.
+
 ### Step 1 — Install the prebuilt SVG fcitx5 (manual, Ubuntu 26.04 / x86_64)
 
 Download `fcitx5-svg-5.1.22-linux-x86_64.tar.gz` from the [Releases](https://github.com/OrangeAreFruit/Fcitx5-Wechat-Theme/releases) page, then run:
@@ -159,17 +165,24 @@ ldd /usr/lib/x86_64-linux-gnu/fcitx5/libclassicui.so | grep librsvg
 
 ```
 fcitx5-wechat-theme/
+├── install-new.sh          # ★ Recommended one-click installer (8 steps, no data loss)
 ├── install.sh              # User-level installer (themes + rime patch)
-├── install-all.sh          # ★ One-click full environment installer (7 steps)
-├── install-fcitx5-svg.sh   # Installs the prebuilt SVG fcitx5 tarball
+├── install-all.sh          # Legacy one-click full environment installer (7 steps)
+├── install-fcitx5-svg.sh   # Installs the prebuilt SVG fcitx5 tarball (manual step 1)
 ├── build-deb.sh            # Builds the .deb package
-├── package-fcitx5.sh       # Builds the fcitx5-svg tarball
+├── package-fcitx5.sh       # Builds the fcitx5-svg tarball (also from a PATCH_DIR)
 ├── theme-switcher.sh       # GNOME dark-mode auto switcher
-├── packages/               # Bundled offline assets used by install-all.sh
-│   ├── fcitx5-svg-5.1.22-linux-x86_64.tar.gz   # prebuilt SVG fcitx5
+├── packages/               # Bundled offline assets used by the installers
+│   ├── fcitx5-svg-5.1.22-linux-x86_64.tar.gz   # prebuilt SVG fcitx5 + patch modules
 │   ├── rime-ice/           # rime-ice (雾凇拼音) dictionary
-│   └── themes/             # wechat-light / wechat-dark
-├── release-notes-v1.1.1.md # Changelog for v1.1.1
+│   └── themes/             # wechat-light / wechat-dark (legacy)
+├── wechat-panel/           # Web settings panel → installed to /opt/fcitx5-wechat-panel
+│   ├── webpanel.py         # pywebview + QtWebEngine transparent app
+│   ├── panel.html          # panel UI (font slider, light/dark cards)
+│   ├── run-panel.sh        # single-instance launcher
+│   └── ime-panel.desktop   # panel desktop entry (path: /opt/fcitx5-wechat-panel)
+├── icons/                  # custom tray icon (fcitx-wusong.svg + 16–128 PNGs)
+├── src/fcitx5-patches/     #覆盖式源码补丁 (classicui / notificationitem) for self-build
 ├── fcitx5/
 │   ├── themes/
 │   │   ├── wechat-light/   # theme.conf + panel.svg + highlight.svg

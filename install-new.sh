@@ -150,6 +150,19 @@ PANEL_DEST="/opt/fcitx5-wechat-panel"
 mkdir -p "$PANEL_DEST"
 cp -a "$PANEL_SRC"/. "$PANEL_DEST/"
 chmod +x "$PANEL_DEST/run-panel.sh" 2>/dev/null || true
+# 预编译补丁模块（候选框齿轮按钮 + 托盘 Preference）固定以
+# $HOME/fcitx5-wechat-panel/run-panel.sh 启动面板 → 在家目录建兼容符号链接。
+# 注意：家目录已有真实目录时保留不动（可能是不想被覆盖的旧面板）。
+if [ -L "$HHOME/fcitx5-wechat-panel" ]; then
+  rm -f "$HHOME/fcitx5-wechat-panel"
+fi
+if [ ! -e "$HHOME/fcitx5-wechat-panel" ]; then
+  ln -s "$PANEL_DEST" "$HHOME/fcitx5-wechat-panel"
+  chown -h "$HUSER":"$(id -gn "$HUSER")" "$HHOME/fcitx5-wechat-panel" 2>/dev/null || true
+  info "兼容路径 $HHOME/fcitx5-wechat-panel -> $PANEL_DEST（齿轮/托盘按钮可打开面板）"
+else
+  warn "已存在 $HHOME/fcitx5-wechat-panel（真实目录），保留不动"
+fi
 # 校验 QtWebEngine（透明面板必需）
 if /usr/bin/python3 -c "import PyQt5.QtWebEngineWidgets" 2>/dev/null \
    || /usr/bin/python3 -c "import PyQt6.QtWebEngineWidgets" 2>/dev/null; then
