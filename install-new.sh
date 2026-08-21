@@ -77,6 +77,24 @@ if [ ${#MISS[@]} -gt 0 ]; then
 else
   info "系统库依赖已满足"
 fi
+
+# ---------------- Wayland 环境变量安全修复 ----------------
+# 根因：Wayland 会话下 GTK_IM_MODULE=fcitx 会让 GTK 应用（nautilus/ptyxis 等）
+# 加载 fcitx5 的 GTK IM module (im-fcitx5.so) 时 segfault，批量闪退。
+# Wayland 走 text-input 协议，根本不需要 GTK_IM_MODULE——检测到 Wayland 时
+# 自动从用户 ~/.profile 移除该行（QT_IM_MODULE / XMODIFIERS 保留）。
+PROF="$HHOME/.profile"
+if [ -S "/run/user/$HUID/wayland-0" ] && [ -f "$PROF" ]; then
+  cp -a "$PROF" "$BACKUP/profile.orig" 2>/dev/null || true
+  if grep -q 'GTK_IM_MODULE=fcitx' "$PROF"; then
+    sed -i '/GTK_IM_MODULE=fcitx/d; /GTK_IM_MODULE="fcitx"/d' "$PROF"
+    chown "$HUSER":"$(id -gn "$HUSER")" "$PROF" 2>/dev/null || true
+    info "Wayland 会话：已移除 ~/.profile 中的 GTK_IM_MODULE=fcitx（避免 GTK 应用崩溃）"
+  else
+    info "Wayland 会话：~/.profile 无 GTK_IM_MODULE=fcitx，无需修复"
+  fi
+fi
+
 [ -f "$ARCHIVE" ] || { err "缺少 $ARCHIVE（SVG fcitx5 压缩包）"; exit 1; }
 [ -d "$PKG/rime-ice" ] || { err "缺少 $PKG/rime-ice/ 词库"; exit 1; }
 [ -d "$ROOT/fcitx5/themes/wechat-light" ] || { err "缺少主题 wechat-light"; exit 1; }
