@@ -230,16 +230,19 @@ Add the same value to all three places, then reload with `fcitx5 -r -d`:
 
 ## Known Issues
 
-- **On Wayland, drop all IM environment variables** (`GTK_IM_MODULE`,
-  `QT_IM_MODULE`, `XMODIFIERS`): fcitx5 uses the text-input protocol there and
-  the X11 IM vars are neither needed nor safe — `GTK_IM_MODULE=fcitx` in
-  particular makes GTK apps (nautilus, ptyxis, …) crash with a segfault when
-  they load fcitx5's GTK IM module. `install-new.sh` detects a Wayland session
-  (/run/user/<uid>/wayland-0) and strips all three from `~/.profile`,
-  `~/.bashrc`, `~/.xprofile`, `~/.pam_environment`,
-  `~/.config/environment.d/*.conf` and `/etc/environment` (backed up first),
-  then rebuilds the GTK3 module cache. If apps on your machine already crash,
-  remove those lines manually and log back in.
+- **On Wayland, GTK IM modules must not be installed**: GTK4 enumerates
+  `gtk-4.0/immodules/` and loads every module at startup — the self-built
+  `libim-fcitx5.so` crashes every GTK4 app (nautilus, …) with
+  `segfault at 0x6cd0`, regardless of any env vars. Wayland input goes through
+  fcitx5's text-input protocol, so `install-new.sh` removes the fcitx IM
+  modules from the GTK2/3/4 immodules dirs (backed up first) and strips the
+  X11-only vars `GTK_IM_MODULE` / `QT_IM_MODULE` / `XMODIFIERS` from
+  `~/.profile`, `~/.bashrc`, `~/.xprofile`, `~/.pam_environment`,
+  `~/.config/environment.d/*.conf` and `/etc/environment`. If apps on your
+  machine already crash, run `sudo rm -f
+  /usr/lib/x86_64-linux-gnu/gtk-4.0/4.0.0/immodules/libim-fcitx5.so
+  /usr/lib/x86_64-linux-gnu/gtk-3.0/3.0.0/immodules/im-fcitx5.so` and log back
+  in.
 - **SVG font-size misalignment**: the default highlight is an SVG tuned for
   14px text. After changing the system font size, the highlight block may no
   longer sit flush with the text until you re-tune `rx`/margins (see

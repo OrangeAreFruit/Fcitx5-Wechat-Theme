@@ -113,7 +113,25 @@ if [ "$WAYLAND_OK" = "1" ]; then
   fi
 fi
 
-# 重建 GTK3 输入法模块缓存，注册 im-fcitx5.so（避免 GTK 目录扫描/加载异常）
+# ---------------- 移除 GTK IM 模块（GTK4 应用批量崩溃修复） ----------------
+# 根因：GTK4 启动时枚举 gtk-4.0/immodules/ 目录并加载其中全部模块。
+# 自编译的 libim-fcitx5.so 初始化时出现空指针跳转（nautilus 的
+# "segfault at 6cd0" 即此），导致所有 GTK4 应用批量崩溃；即使清空
+# GTK_IM_MODULE 也无效，因为 GTK4 不走该变量、固定使用 text-input。
+# Wayland 下 GTK2/3/4 都不需要 fcitx 的 GTK IM 模块——直接移除，
+# 再重建 GTK3 缓存保持目录一致。
+for f in \
+  "/usr/lib/x86_64-linux-gnu/gtk-4.0/4.0.0/immodules/libim-fcitx5.so" \
+  "/usr/lib/x86_64-linux-gnu/gtk-3.0/3.0.0/immodules/im-fcitx5.so" \
+  "/usr/lib/x86_64-linux-gnu/gtk-2.0/2.10.0/immodules/im-fcitx5.so"; do
+  if [ -f "$f" ]; then
+    cp -a "$f" "$BACKUP${f//\//_}.orig" 2>/dev/null || true
+    rm -f "$f"
+    info "已移除 GTK IM 模块：$f（修复 GTK 应用崩溃）"
+  fi
+done
+
+# 重建 GTK3 输入法模块缓存，与目录保持一致（不含 fcitx 模块）
 GTK3_Q=""
 for cand in /usr/lib/x86_64-linux-gnu/libgtk-3-0/gtk-query-immodules-3.0 \
            /usr/lib/x86_64-linux-gnu/libgtk-3-0t64/gtk-query-immodules-3.0; do
@@ -124,7 +142,7 @@ if [ -n "$GTK3_Q" ]; then
   if ls "$GTK3_IM"/immodules/im-*.so >/dev/null 2>&1; then
     cp -a "$GTK3_IM/immodules.cache" "$BACKUP/immodules-gtk3.cache.orig" 2>/dev/null || true
     "$GTK3_Q" "$GTK3_IM"/immodules/im-*.so > "$GTK3_IM/immodules.cache" 2>/dev/null \
-      && info "GTK3 输入法模块缓存已重建（注册 im-fcitx5）" \
+      && info "GTK3 输入法模块缓存已重建（与目录一致）" \
       || warn "GTK3 模块缓存重建失败（可忽略，Wayland 下不依赖它）"
   fi
 fi
