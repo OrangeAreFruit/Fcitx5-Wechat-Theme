@@ -1,6 +1,9 @@
 # Fcitx5 WeChat Theme
 
-WeChat-style input method themes for [Fcitx5](https://github.com/fcitx/fcitx5), with a rime-ice memory patch and a ready-to-install `.deb` package.
+WeChat-style input method for [Fcitx5](https://github.com/fcitx/fcitx5), with
+**patch modules** (candidate-window gear button, tray icon/menu), **Web settings
+panel** (transparent rounded card), a rime-ice layout, and a one-click install
+script validated in Docker.
 
 ![Light](screenshots/light-mode-exam.png) ![Dark](screenshots/dark-mode-exam.png)
 
@@ -9,67 +12,63 @@ WeChat-style input method themes for [Fcitx5](https://github.com/fcitx/fcitx5), 
 > - **Just want to try it** (no tweaking): run the install commands below and it works out of the box.
 > - **Want pixel-perfect results after changing the font size / margins**: this theme uses **SVG-based highlight blocks**. The SVGs are tuned for **14px text** (see [Customization](#customization-diy)); if you bump the system font size without adjusting the SVG `rx`/margins, the highlight roundness breaks. Beginners should treat the shipped defaults as the recommended baseline and only tweak via the guide below.
 
-## Features
+## New in this branch
 
-- **Two SVG vector themes**: `wechat-light` (white, bright green highlight) and `wechat-dark` (translucent dark, muted green highlight).
-- **True rounded corners**: rendered with SVG + nine-patch stretching, so the corners keep their radius no matter how many candidates are shown.
-- **WeChat-matched geometry**: outer radius 10px, highlight radius 8px, 4/6px inner padding, 14px candidate text.
-- **Rime memory patch**: speeds up dynamic frequency tuning so repeated words rise in the candidate list.
-- **GNOME dark-mode switcher**: auto-switches between light/dark based on `org.gnome.desktop.interface color-scheme`.
+- **Candidate-window gear button** (classicui patch): a green ring button at the
+  bottom-right of the candidate window; click it to open the **Web settings
+  panel** (font size / light-dark theme). Hover shows a light-blue rounded
+  backdrop. Right-click the candidate window for a quick menu.
+- **Theme / font changes apply instantly** (classicui patch): the candidate
+  window watches `~/.config/fcitx5/conf/classicui.conf` and repaints on change —
+  no `fcitx5 -r` needed.
+- **Custom tray icon** (notificationitem patch): fixed `fcitx-wusong` icon
+  (green rounded square + sprout), sent as real pixmap data; tray menu is
+  reduced to **Preference** (opens the settings panel) + **Restart**.
+- **Web settings panel** (`wechat-panel/`): pywebview + QtWebEngine, fully
+  transparent rounded card pinned on top (WeChat-style), slider font size,
+  light/dark theme cards with preview, instant apply, single-instance wake-up,
+  drag by the title bar.
+- **One-click installer** `install-new.sh` for a clean Ubuntu/Debian x86_64:
+  deploys the prebuilt SVG fcitx5 + patch modules, themes, rime-ice (keeps your
+  existing rime userdb/build), tray icon, panel autostart — and **never deletes
+  user data**; every overwritten system file is backed up to
+  `/root/fcitx5-backup-<ts>/`. Validated in an Ubuntu 26.04 Docker container.
 
 ## Requirements
 
 SVG rendering needs fcitx5 classicui built with librsvg:
 
 - fcitx5 **>= 5.1.22** (distro builds here).
-- Ubuntu 26.04 ships fcitx5 **5.1.19** without SVG support — build from source, see [Build from source](#build-from-source).
+- Ubuntu 26.04 ships fcitx5 **5.1.19** without SVG support — the tar.gz bundles
+  a self-built 5.1.22 with the patches, see [Installation](#installation).
 
 ## Installation
 
-> **💡 One-click install (recommended):** if you want a **clean, from-zero
-> environment** that ends up with *only* Rime + rime-ice (雾凇拼音) + the WeChat
-> theme, run the bundled `install-all.sh` (see below). It removes other input
-> method stacks, pulls the needed libraries, deploys the prebuilt SVG fcitx5,
-> installs rime-ice + both themes, and configures fcitx5 to expose only
-> "雾凇拼音". Validated in a fresh Ubuntu 26.04 Docker container.
+### One-click install (recommended) — `install-new.sh`
 
-### One-click install (entire environment) — `install-all.sh`
-
-For a brand-new / clean Ubuntu (x86_64), the whole thing in one command:
+Download this repo (git clone, or unpack the release tarball), then from the
+repo root:
 
 ```bash
-sudo bash install-all.sh
+sudo bash install-new.sh
 ```
 
-This performs all **7 steps** automatically:
+The script (idempotent, no user data removed):
 
-1. Removes any existing input-method stacks (ibus / fcitx / extra engines),
-   keeping fcitx5 / librime / librsvg.
-2. Installs the required system libraries, including the hard dependency
-   `libxcb-ewmh2` (missing it makes the skin vanish while typing still works).
-3. Deploys the bundled prebuilt **SVG fcitx5 5.1.22** (`packages/`) so real
-   rounded corners render.
-4. Installs the **rime-ice (雾凇拼音)** dictionary from `packages/rime-ice/`.
-5. Installs `wechat-light` / `wechat-dark` themes.
-6. Configures fcitx5: **only Rime enabled**, Chinese active by default,
-   `Theme=wechat-light`.
-7. Restarts fcitx5.
+1. Installs missing system libraries (librsvg, xcb, librime, …).
+2. Deploys the bundled prebuilt **SVG fcitx5 5.1.22** from `packages/`
+   (includes the classicui + notificationitem patches).
+3. Installs `wechat-light` / `wechat-dark` themes (user-level).
+4. Installs the **rime-ice (雾凇拼音)** dictionary — keeps existing `userdb/`,
+   `build/`, user configs; only backs up overwritten files.
+5. Configures fcitx5: Rime enabled, Chinese by default, `Theme=wechat-light`.
+6. Installs the Web settings panel to `/opt/fcitx5-wechat-panel` (+ autostart).
+7. Installs the custom tray icon + autostart entries.
+8. Restarts fcitx5.
 
-The bundled assets (`packages/`) ship with the repo, so **no network / GitHub
-access is required** at install time — everything is local and offline.
+Log out & back in once so the input-method environment variables take effect.
 
-> Details of what changed in this version are in
-> [release-notes-v1.1.1.md](release-notes-v1.1.1.md).
-
----
-
-> **Ubuntu 26.04 users need full SVG rounded corners.** The distro's
-> fcitx5 (5.1.19) has no SVG support, so follow **Step 1** below first to
-> install the prebuilt SVG fcitx5 (5.1.22), then **Step 2** to install the
-> theme. On distros that ship fcitx5 >= 5.1.22 (Arch, Fedora, ...), skip
-> Step 1 and go straight to Step 2.
-
-### Step 1 — Install the prebuilt SVG fcitx5 (Ubuntu 26.04 / x86_64)
+### Step 1 — Install the prebuilt SVG fcitx5 (manual, Ubuntu 26.04 / x86_64)
 
 Download `fcitx5-svg-5.1.22-linux-x86_64.tar.gz` from the [Releases](https://github.com/OrangeAreFruit/Fcitx5-Wechat-Theme/releases) page, then run:
 

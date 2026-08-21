@@ -3,8 +3,13 @@
 #  Package the self-compiled fcitx5 (>= 5.1.22, SVG support)
 #  into a single tarball that Ubuntu users can extract & copy.
 #
-#  Usage:  bash package-fcitx5.sh
+#  Usage:  bash package-fcitx5.sh [PATCH_DIR]
 #  Output: dist/fcitx5-svg-<version>-linux-x86_64.tar.gz
+#
+#  PATCH_DIR (optional): directory containing patched modules to bundle
+#  (libclassicui.so + libnotificationitem.so). If given, these are copied
+#  from there instead of from the live system, so the tarball carries the
+#  latest candidate-button / tray patches regardless of local state.
 #
 #  NOTE: Run this on the machine where fcitx5 was compiled from
 #  source with librsvg. The tarball is tied to Ubuntu 26.04 x86_64
@@ -18,6 +23,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$SCRIPT_DIR"
 DIST="$ROOT/dist"
 LIBDIR="/usr/lib/x86_64-linux-gnu"
+PATCH_DIR="${1:-}"
 
 # ---- resolve version from the installed libFcitx5Core ----
 VERSION="$(dpkg-query -W -f='${Version}' fcitx5 2>/dev/null || true)"
@@ -61,6 +67,14 @@ cp -a "$LIBDIR"/fcitx5/libclassicui.so "$LIBDIR"/fcitx5/librime.so \
       "$STAGE/usr/lib/x86_64-linux-gnu/fcitx5/"
 # keep the qt6 subdir of the addon dir too
 [ -d "$LIBDIR/fcitx5/qt6" ] && cp -a "$LIBDIR/fcitx5/qt6" "$STAGE/usr/lib/x86_64-linux-gnu/fcitx5/"
+# 3b. overlay patched modules (candidate-button classicui + tray notificationitem)
+if [ -n "$PATCH_DIR" ]; then
+  [ -f "$PATCH_DIR/libclassicui.so" ] && cp -f "$PATCH_DIR/libclassicui.so" \
+    "$STAGE/usr/lib/x86_64-linux-gnu/fcitx5/libclassicui.so"
+  [ -f "$PATCH_DIR/libnotificationitem.so" ] && cp -f "$PATCH_DIR/libnotificationitem.so" \
+    "$STAGE/usr/lib/x86_64-linux-gnu/fcitx5/libnotificationitem.so"
+  info "Overlaid patched modules from $PATCH_DIR"
+fi
 info "fcitx5 plugins (classicui/rime/frontends)"
 
 # 4. gtk im modules
