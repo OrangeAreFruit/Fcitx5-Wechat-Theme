@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=IME Panel
+Name[zh_CN]=输入法面板
+Comment=Adjust IME font size and theme (Fcitx5)
+Comment[zh_CN]=调整输入法字体大小与主题
+Exec=/home/lanfanqie/fcitx5-wechat-panel/run-panel.sh
+Icon=fcitx_rime_latin
+Terminal=false
+Type=Application
+Categories=Settings;
+StartupNotify=false
+StartupWMClass=IME Settings

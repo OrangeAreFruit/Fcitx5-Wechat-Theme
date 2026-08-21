@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>IME Panel</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: "PingFang SC", "Noto Sans CJK SC", "Segoe UI", system-ui, sans-serif; }
+  html, body { height: 100%; width: 100%; }
+  body {
+    background: transparent;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+  }
+
+  /* 微信风格圆角面板 */
+  .panel {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.18);
+    padding: 18px 20px;
+    min-width: 220px;
+    transition: background .25s, border-color .25s;
+  }
+
+  /* 顶栏：标题 + 关闭 */
+  .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; user-select: none; }
+  .head .title { font-size: 14px; font-weight: 600; color: var(--fg); }
+  .head .close { color: var(--sub); cursor: pointer; font-size: 15px; line-height: 1; padding: 2px; }
+  .head .close:hover { color: var(--fg); }
+
+  /* 两段按钮组 */
+  .group { display: flex; align-items: center; gap: 8px; }
+  .group-title { font-size: 11px; color: var(--sub); margin-bottom: 6px; font-weight: 500; }
+
+  .seg { display: inline-flex; background: var(--seg-bg); border-radius: 12px; padding: 4px; gap: 2px; }
+  .seg button {
+    border: none; background: transparent;
+    width: 36px; height: 32px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--sub);
+    transition: all .15s;
+  }
+  .seg button:hover { color: var(--fg); background: var(--hover); }
+  .seg button.active { background: var(--accent); color: #fff; box-shadow: 0 2px 8px var(--accent-shadow); }
+
+  .row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .row:last-child { margin-bottom: 4px; }
+
+  /* 字体行：标签居左、滑块拉伸居中、数值固定在滑块右侧，三者在同一水平基线 */
+  .font-row { display: flex; align-items: center; justify-content: flex-start; gap: 12px; }
+  .font-row .group-title { flex: 0 0 auto; margin-bottom: 0; min-width: 30px; }
+  .font-row input[type="range"]#fontRange { flex: 1; min-width: 0; }
+  .font-row .font-value { flex: 0 0 26px; text-align: right; font-size: 15px; font-weight: 600; color: var(--fg); }
+  input[type="range"]#fontRange { accent-color: var(--accent); height: 20px; cursor: pointer; }
+
+  /* 预览 */
+  .preview {
+    margin-top: 6px; padding: 14px 16px; border-radius: 14px;
+    background: var(--pv-bg); display: flex; align-items: center; gap: 8px;
+  }
+  .preview .cand { color: var(--pv-fg); }
+  .preview .hl { background: var(--accent); color: var(--pv-hl-fg); padding: 2px 8px; border-radius: 8px; }
+
+  :root[data-theme="light"] {
+    --bg: #ffffff; --border: #eef0f2; --fg: #1f2329;
+    --sub: #6e7480; --seg-bg: #f2f3f5; --hover: #e5e6eb;
+    --accent: #07c160; --accent-shadow: rgba(7,193,96,.4);
+    --pv-bg: #eef0f3; --pv-fg: #000000; --pv-hl-fg: #ffffff;
+  }
+  :root[data-theme="dark"] {
+    --bg: #1f1f1f; --border: #333; --fg: #f5f5f5;
+    --sub: #b8b8b8; --seg-bg: #2c2c2c; --hover: #3a3a3a;
+    --accent: #10d27c; --accent-shadow: rgba(16,210,124,.45);
+    --pv-bg: #383838; --pv-fg: #ffffff; --pv-hl-fg: #ffffff;
+  }
+  /* SVG icons inline */
+  .ic { width: 18px; height: 18px; }
+</style>
+</head>
+<body>
+  <div class="panel">
+    <div class="head">
+      <span class="title">输入法</span>
+      <span class="close" onclick="window.pywebview.api.close()">✕</span>
+    </div>
+
+    <!-- 第一组：日/夜切换（仅 icon） -->
+    <div class="row">
+      <span class="group-title">主题</span>
+      <div class="seg" id="themeSeg">
+        <button id="btnSun" title="浅色" onclick="setTheme('light')">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>
+        </button>
+        <button id="btnMoon" title="深色" onclick="setTheme('dark')">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- 第二组：字体大小 (滑动条) -->
+    <div class="row font-row">
+      <span class="group-title">字体</span>
+      <input type="range" id="fontRange" min="12" max="28" step="1" value="14">
+      <span class="font-value" id="fontVal">14</span>
+    </div>
+
+    <!-- 预览 -->
+    <div class="preview">
+      <span class="cand" id="pv">Hello</span>
+      <span class="hl" id="pv2">你好</span>
+    </div>
+  </div>
+
+<script>
+  let state = { theme: 'dark', font: 14 };
+
+  function applyConfig(cfg) {
+    if (!cfg) return;
+    if (typeof cfg.font === 'number' && cfg.font >= 12 && cfg.font <= 28) state.font = cfg.font;
+    if (cfg.theme === 'light' || cfg.theme === 'dark') state.theme = cfg.theme;
+    render();
+  }
+  // 后端检测到配置文件变化时推送（前后端双向同步）
+  window.pywebviewPushConfig = applyConfig;
+
+  function render() {
+    document.documentElement.setAttribute('data-theme', state.theme);
+    document.getElementById('btnSun').classList.toggle('active', state.theme==='light');
+    document.getElementById('btnMoon').classList.toggle('active', state.theme==='dark');
+    document.getElementById('fontVal').textContent = state.font;
+    document.getElementById('fontRange').value = state.font;
+    document.getElementById('pv').style.fontSize = state.font + 'px';
+    document.getElementById('pv2').style.fontSize = state.font + 'px';
+  }
+
+  function setTheme(t) {
+    state.theme = t; render();
+    if (window.pywebview?.api) window.pywebview.api.set_theme(t);
+  }
+  document.getElementById('fontRange').addEventListener('input', function(){
+    state.font = parseInt(this.value, 10);
+    render();
+    if (window.pywebview?.api) window.pywebview.api.set_font(state.font);
+  });
+
+  // 打开时读取一次实际配置（避免每次都显示默认 14px）
+  window.addEventListener('pywebviewready', function(){
+    if (window.pywebview?.api && window.pywebview.api.get_config) {
+      window.pywebview.api.get_config().then(applyConfig).catch(function(){});
+    }
+  });
+
+  render();
+
+  // 窗口拖动：按住顶栏(非✕)拖动。Wayland 下应用不能自行 move()，
+  // 由后端调用 QWindow::startSystemMove() 请求窗口管理器接管拖动。
+  (function(){
+    var head = document.querySelector('.head');
+    head.addEventListener('pointerdown', function(e){
+      if (e.target.closest && e.target.closest('.close')) return;
+      if (window.pywebview?.api) window.pywebview.api.start_drag();
+    });
+  })();
+</script>
+</body>
+</html>
