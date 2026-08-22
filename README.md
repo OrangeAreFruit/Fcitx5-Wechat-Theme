@@ -5,6 +5,21 @@ WeChat-style input method for [Fcitx5](https://github.com/fcitx/fcitx5), with
 panel** (transparent rounded card), a rime-ice layout, and a one-click install
 script validated in Docker.
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Ubuntu-26.04%20LTS-%23E95420?logo=ubuntu&logoColor=white" alt="Ubuntu 26.04 LTS">
+  <img src="https://img.shields.io/badge/Architecture-x86__64-informational" alt="x86_64">
+  <img src="https://img.shields.io/badge/Desktop-GNOME%20%2F%20Wayland-blueviolet" alt="GNOME / Wayland">
+  <img src="https://img.shields.io/badge/Fcitx5-5.1.22%20SVG-%2307c160" alt="Fcitx5 5.1.22 SVG">
+  <img src="https://img.shields.io/badge/Engine-Rime--ice-brightgreen" alt="Rime (rime-ice)">
+</p>
+
+> **Supported environment** — this project ships a **self-built fcitx5 5.1.22
+> (x86_64) with SVG skins** plus patch modules, and the one-click installer has
+> been validated on **Ubuntu 26.04 (GNOME 50 / Wayland)** in Docker. Not
+> verified on other distros, X11 sessions, or non-x86_64 architectures — on
+> those, build from the source patches in `src/fcitx5-patches/` against your own
+> fcitx5 instead (see [Build from source](#build-from-source)).
+
 ![Light](assets/light-theme.png) ![Dark](assets/dark-theme.png)
 
 ![Settings panel (light)](assets/light-theme-panel.png) ![Settings panel (dark)](assets/dark-theme-panel.png)
