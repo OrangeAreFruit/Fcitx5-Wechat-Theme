@@ -78,40 +78,28 @@ else
   info "系统库依赖已满足"
 fi
 
-# ---------------- Wayland 环境变量安全修复（防御机制） ----------------
-# 根因：Wayland 下 fcitx5 走 text-input 协议，不需要 X11 那套 IM 环境变量。
-# 尤其 GTK_IM_MODULE=fcitx 会让 GTK 应用（nautilus/ptyxis 等）加载
-# im-fcitx5.so 时 segfault 批量闪退。本方案面向 Wayland（Ubuntu 26.04），
-# 检测到 Wayland 会话时从常见配置文件移除三件套（先备份，幂等）。
-WAYLAND_OK=0
-[ -S "/run/user/$HUID/wayland-0" ] && WAYLAND_OK=1
-if [ "$WAYLAND_OK" = "1" ]; then
-  CLEANED_FILES=""
-  clean_im() {
-    local f="$1"
-    [ -f "$f" ] || return 0
-    if grep -qE '^(export[[:space:]]+)?(GTK_IM_MODULE|QT_IM_MODULE|XMODIFIERS)' "$f"; then
-      cp -a "$f" "$BACKUP${f//\//_}.orig" 2>/dev/null || true
-      sed -i -E \
-        '/^(export[[:space:]]+)?(GTK_IM_MODULE|QT_IM_MODULE|XMODIFIERS)[[:space:]]*=(.*)$/d' "$f"
-      CLEANED_FILES="$CLEANED_FILES $f"
-    fi
-  }
-  # 用户级配置文件 + 系统级 /etc/environment
-  clean_im "$HHOME/.profile"
-  clean_im "$HHOME/.bashrc"
-  clean_im "$HHOME/.xprofile"
-  clean_im "$HHOME/.pam_environment"
-  for cf in "$HHOME"/.config/environment.d/*.conf; do
-    [ -e "$cf" ] && clean_im "$cf"
-  done
-  clean_im "/etc/environment"
-  if [ -n "$CLEANED_FILES" ]; then
-    info "Wayland 会话：已从以下文件移除 IM 环境变量（避免 GTK 应用崩溃）：$CLEANED_FILES"
+# ---------------- 全局输入法环境变量（XWayland 应用必需） ----------------
+# 微信/QQ 等 Electron 应用走 XWayland（X11 兼容层），它们不认 Wayland 的
+# text-input 协议，必须通过 XMODIFIERS + fcitx5 的 XIM 服务才能输入。
+# 向 /etc/environment 追加三件套（所有用户/所有应用全局生效，幂等，
+# 不覆盖已有内容；先备份原文件）。
+# 安全性：GTK 应用的批量崩溃由 GTK4 枚举 immodules 目录加载
+# libim-fcitx5.so 引起（下方会移除模块文件），与这些环境变量无关；
+# 模块移除后 GTK_IM_MODULE=fcitx 只会让 GTK fallback 到默认输入，无崩溃路径。
+ENVF="/etc/environment"
+[ -f "$ENVF" ] && cp -a "$ENVF" "$BACKUP/etc_environment.orig" 2>/dev/null || true
+append_env() {
+  local key="$1" val="$2"
+  if grep -qE "^${key}=" "$ENVF" 2>/dev/null; then
+    info "$key 已存在于 /etc/environment（跳过）"
   else
-    info "Wayland 会话：未发现 IM 环境变量残留（防御已就位）"
+    echo "${key}=${val}" >> "$ENVF"
+    info "已追加 ${key}=${val} → /etc/environment（全局生效，重新登录后对 XWayland 应用生效）"
   fi
-fi
+}
+append_env "XMODIFIERS" "@im=fcitx"
+append_env "GTK_IM_MODULE" "fcitx"
+append_env "QT_IM_MODULE" "fcitx"
 
 # ---------------- 移除 GTK IM 模块（GTK4 应用批量崩溃修复） ----------------
 # 根因：GTK4 启动时枚举 gtk-4.0/immodules/ 目录并加载其中全部模块。
