@@ -10,7 +10,7 @@
 #          - Rime 已有词库(userdb/build) 保留，只补充词典
 #          - 所有被覆盖的系统文件自动备份到 /root/fcitx5-backup-<时间戳>/
 #  ● 用法：解压仓库后（或 git clone 后）在仓库根目录执行：
-#          sudo bash install-new.sh
+#          sudo bash install.sh
 #  ● 输出：每步都有日志；末尾有 fcitx5 是否正常启动的提示
 # ============================================================
 set -euo pipefail

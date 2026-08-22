@@ -53,7 +53,7 @@ SVG rendering needs fcitx5 classicui built with librsvg:
 
 ## Installation
 
-### One-click install (recommended) — `install-new.sh`
+### One-click install (recommended) — `install.sh`
 
 Download the latest **Source code** zip/tar.gz from the
 [Releases](https://github.com/OrangeAreFruit/Fcitx5-Wechat-Theme/releases) page
@@ -234,7 +234,7 @@ Add the same value to all three places, then reload with `fcitx5 -r -d`:
   `gtk-4.0/immodules/` and loads every module at startup — the self-built
   `libim-fcitx5.so` crashes every GTK4 app (nautilus, …) with
   `segfault at 0x6cd0`, regardless of any env vars. Wayland input goes through
-  fcitx5's text-input protocol, so `install-new.sh` removes the fcitx IM
+  fcitx5's text-input protocol, so `install.sh` removes the fcitx IM
   modules from the GTK2/3/4 immodules dirs (backed up first) and rebuilds the
   GTK3 module cache. If apps on your machine already crash, run `sudo rm -f
   /usr/lib/x86_64-linux-gnu/gtk-4.0/4.0.0/immodules/libim-fcitx5.so
