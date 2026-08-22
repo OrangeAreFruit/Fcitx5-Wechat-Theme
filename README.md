@@ -37,7 +37,7 @@ script validated in Docker.
   transparent rounded card pinned on top (WeChat-style), slider font size,
   light/dark theme cards with preview, instant apply, single-instance wake-up,
   drag by the title bar.
-- **One-click installer** `install-new.sh` for a clean Ubuntu/Debian x86_64:
+- **One-click installer** `install.sh` for a clean Ubuntu/Debian x86_64:
   deploys the prebuilt SVG fcitx5 + patch modules, themes, rime-ice (keeps your
   existing rime userdb/build), tray icon, panel autostart — and **never deletes
   user data**; every overwritten system file is backed up to
@@ -61,7 +61,7 @@ Download the latest **Source code** zip/tar.gz from the
 the repo root:
 
 ```bash
-sudo bash install-new.sh
+sudo bash install.sh
 ```
 
 The script (idempotent, no user data removed):
@@ -137,7 +137,7 @@ only needed when you compile fcitx5 yourself.
 
 ```
 fcitx5-wechat-theme/
-├── install-new.sh          # ★ One-click installer (run as root; no data loss)
+├── install.sh              # ★ One-click installer (run as root; no data loss)
 ├── package-fcitx5.sh       # Repacks the prebuilt SVG fcitx5 tarball (maintainers)
 ├── packages/               # Bundled offline assets for the installer
 │   ├── fcitx5-svg-5.1.22-linux-x86_64.tar.gz   # prebuilt SVG fcitx5 + patch modules
@@ -242,7 +242,7 @@ Add the same value to all three places, then reload with `fcitx5 -r -d`:
   in.
 - **XWayland apps (WeChat/QQ…) need global IM env vars**: they run through the
   X11 compatibility layer and do not speak Wayland text-input, so they can only
-  type via fcitx5's XIM service. `install-new.sh` appends
+  type via fcitx5's XIM service. `install.sh` appends
   `XMODIFIERS=@im=fcitx`, `GTK_IM_MODULE=fcitx` and `QT_IM_MODULE=fcitx` to
   `/etc/environment` (idempotent, backed up first). This is safe: the crash
   above is caused by the module files, which are removed, so the env vars have

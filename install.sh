@@ -23,7 +23,7 @@ step()  { echo; echo -e "${CYAN}===== $1 =====${NC}"; }
 
 # ---------------- 基础 ----------------
 if [ "$(id -u)" -ne 0 ]; then
-  err "请用 sudo 运行：sudo bash install-new.sh"
+  err "请用 sudo 运行：sudo bash install.sh"
   exit 1
 fi
 HUSER="${SUDO_USER:-${USER:-$(id -un)}}"

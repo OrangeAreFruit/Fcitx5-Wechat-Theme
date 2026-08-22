@@ -15,7 +15,7 @@
 ## 功能说明
 
 ### classicui（候选框）
-- **右下角绿色圆环设置按钮**：位于最后一个候选右侧，点击唤起外部设置面板（`$HOME/fcitx5-wechat-panel/run-panel.sh`，兼容符号链接由 `install-new.sh` 创建指向 `/opt/fcitx5-wechat-panel`）；鼠标悬停浮现浅蓝圆角背景。
+- **右下角绿色圆环设置按钮**：位于最后一个候选右侧，点击唤起外部设置面板（`$HOME/fcitx5-wechat-panel/run-panel.sh`，兼容符号链接由 `install.sh` 创建指向 `/opt/fcitx5-wechat-panel`）；鼠标悬停浮现浅蓝圆角背景。
 - **右键菜单**：候选框右键弹出「设置/主题/重启输入法」菜单。
 - **主题/字号即时生效**：监听 `~/.config/fcitx5/conf/classicui.conf` 变化自动重载并重绘，无需重启 fcitx5。
 - **布局预留**：右侧为设置按钮预留 space，避免被窗口边缘裁切。
